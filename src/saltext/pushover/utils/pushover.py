@@ -3,10 +3,10 @@ Library for interacting with Pushover API
 
 .. versionadded:: 2016.3.0
 """
-
 import http.client
 import logging
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode
+from urllib.parse import urljoin
 
 import salt.utils.http
 from salt.version import __version__
@@ -106,10 +106,10 @@ def validate_sound(sound, token):
                 if _message.get("dict", {}).get("status", "") == 1:
                     sounds = _message.get("dict", {}).get("sounds", "")
                     if sound in sounds:
-                        ret["message"] = "Valid sound {}.".format(sound)
+                        ret["message"] = f"Valid sound {sound}."
                         ret["res"] = True
                     else:
-                        ret["message"] = "Warning: {} not a valid sound.".format(sound)
+                        ret["message"] = f"Warning: {sound} not a valid sound."
                         ret["res"] = False
                 else:
                     ret["message"] = "".join(_message.get("dict", {}).get("errors"))

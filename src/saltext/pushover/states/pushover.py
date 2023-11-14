@@ -102,18 +102,16 @@ def post_message(
     ret = {"name": name, "changes": {}, "result": False, "comment": ""}
 
     if __opts__["test"]:
-        ret["comment"] = "The following message is to be sent to PushOver: {}".format(
-            message
-        )
+        ret["comment"] = f"The following message is to be sent to PushOver: {message}"
         ret["result"] = None
         return ret
 
     if not user:
-        ret["comment"] = "PushOver user is missing: {}".format(user)
+        ret["comment"] = f"PushOver user is missing: {user}"
         return ret
 
     if not message:
-        ret["comment"] = "PushOver message is missing: {}".format(message)
+        ret["comment"] = f"PushOver message is missing: {message}"
         return ret
 
     result = __salt__["pushover.post_message"](
@@ -129,8 +127,8 @@ def post_message(
 
     if result:
         ret["result"] = True
-        ret["comment"] = "Sent message: {}".format(name)
+        ret["comment"] = f"Sent message: {name}"
     else:
-        ret["comment"] = "Failed to send message: {}".format(name)
+        ret["comment"] = f"Failed to send message: {name}"
 
     return ret
