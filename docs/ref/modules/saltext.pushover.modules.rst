@@ -1,6 +1,6 @@
 
-saltext.pushover.modules.pushover_mod
-=====================================
+saltext.pushover.modules.pushover_notify
+========================================
 
-.. automodule:: saltext.pushover.modules.pushover_mod
+.. automodule:: saltext.pushover.modules.pushover_notify
     :members:

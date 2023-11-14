@@ -9,3 +9,4 @@ _________________
     :toctree:
 
     saltext.pushover.modules.pushover_mod
+    saltext.pushover.modules.pushover_notify
