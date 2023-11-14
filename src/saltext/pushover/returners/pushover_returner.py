@@ -78,13 +78,12 @@ To override individual configuration items, append --return_kwargs '{"key:": "va
     salt '*' test.ping --return pushover --return_kwargs '{"title": "Salt is awesome!"}'
 
 """
-
 import logging
 import pprint
 import urllib.parse
 
 import salt.returners
-import salt.utils.pushover
+import saltext.pushover.utils.pushover
 from salt.exceptions import SaltInvocationError
 
 log = logging.getLogger(__name__)
@@ -172,7 +171,7 @@ def _post_message(
     :return:            Boolean if message was sent successfully.
     """
 
-    user_validate = salt.utils.pushover.validate_user(user, device, token)
+    user_validate = saltext.pushover.utils.pushover.validate_user(user, device, token)
     if not user_validate["result"]:
         return user_validate
 
@@ -187,11 +186,11 @@ def _post_message(
     parameters["message"] = message
 
     if sound:
-        sound_validate = salt.utils.pushover.validate_sound(sound, token)
+        sound_validate = saltext.pushover.utils.pushover.validate_sound(sound, token)
         if sound_validate["res"]:
             parameters["sound"] = sound
 
-    result = salt.utils.pushover.query(
+    result = saltext.pushover.utils.pushover.query(
         function="message",
         method="POST",
         header_dict={"Content-Type": "application/x-www-form-urlencoded"},
@@ -230,6 +229,7 @@ def returner(ret):
                 "Priority 2 requires pushover.expire and pushover.retry options."
             )
 
+    # pylint: disable=consider-using-f-string
     message = "id: {}\r\nfunction: {}\r\nfunction args: {}\r\njid: {}\r\nreturn: {}\r\n".format(
         ret.get("id"),
         ret.get("fun"),

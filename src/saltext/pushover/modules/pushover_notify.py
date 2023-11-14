@@ -14,12 +14,10 @@ Module for sending messages to Pushover (https://www.pushover.net)
         pushover:
           token: abAHuZyCLtdH8P4zhmFZmgUHUsv1ei8
 """
-
-
 import logging
 import urllib.parse
 
-import salt.utils.pushover
+import saltext.pushover.utils.pushover
 from salt.exceptions import SaltInvocationError
 
 log = logging.getLogger(__name__)
@@ -72,23 +70,19 @@ def post_message(
     """
 
     if not token:
-        token = __salt__["config.get"]("pushover.token") or __salt__["config.get"](
-            "pushover:token"
-        )
+        token = __salt__["config.get"]("pushover.token") or __salt__["config.get"]("pushover:token")
         if not token:
             raise SaltInvocationError("Pushover token is unavailable.")
 
     if not user:
-        user = __salt__["config.get"]("pushover.user") or __salt__["config.get"](
-            "pushover:user"
-        )
+        user = __salt__["config.get"]("pushover.user") or __salt__["config.get"]("pushover:user")
         if not user:
             raise SaltInvocationError("Pushover user key is unavailable.")
 
     if not message:
         raise SaltInvocationError('Required parameter "message" is missing.')
 
-    user_validate = salt.utils.pushover.validate_user(user, device, token)
+    user_validate = saltext.pushover.utils.pushover.validate_user(user, device, token)
     if not user_validate["result"]:
         return user_validate
 
@@ -105,10 +99,10 @@ def post_message(
     parameters["retry"] = retry
     parameters["message"] = message
 
-    if sound and salt.utils.pushover.validate_sound(sound, token)["res"]:
+    if sound and saltext.pushover.utils.pushover.validate_sound(sound, token)["res"]:
         parameters["sound"] = sound
 
-    result = salt.utils.pushover.query(
+    result = saltext.pushover.utils.pushover.query(
         function="message",
         method="POST",
         header_dict={"Content-Type": "application/x-www-form-urlencoded"},
