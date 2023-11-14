@@ -8,5 +8,4 @@ ________________
 .. autosummary::
     :toctree:
 
-    saltext.pushover.returners.pushover_mod
     saltext.pushover.returners.pushover_returner

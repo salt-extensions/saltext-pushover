@@ -1,6 +1,6 @@
 
-saltext.pushover.states.pushover_mod
-====================================
+saltext.pushover.states.pushover
+================================
 
-.. automodule:: saltext.pushover.states.pushover_mod
+.. automodule:: saltext.pushover.states.pushover
     :members:
