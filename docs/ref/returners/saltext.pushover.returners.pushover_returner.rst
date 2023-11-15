@@ -1,4 +1,3 @@
-
 saltext.pushover.returners.pushover_returner
 ============================================
 

@@ -7,10 +7,16 @@ Complete List of pushover
 .. toctree::
    :maxdepth: 2
 
-   ref/modules.rst
+   ref/modules/index
 
 
 .. toctree::
    :maxdepth: 2
 
-   ref/states.rst
+   ref/returners/index
+
+
+.. toctree::
+   :maxdepth: 2
+
+   ref/states/index

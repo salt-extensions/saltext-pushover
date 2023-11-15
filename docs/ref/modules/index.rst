@@ -1,11 +1,12 @@
-
 .. all-saltext.pushover.modules:
 
 _________________
 Execution Modules
 _________________
 
+.. currentmodule:: saltext.pushover.modules
+
 .. autosummary::
     :toctree:
 
-    saltext.pushover.modules.pushover_notify
+    pushover_notify

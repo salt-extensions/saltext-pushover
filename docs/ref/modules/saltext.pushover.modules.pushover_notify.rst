@@ -1,4 +1,3 @@
-
 saltext.pushover.modules.pushover_notify
 ========================================
 

@@ -1,11 +1,12 @@
-
 .. all-saltext.pushover.returners:
 
 ________________
 Returner Modules
 ________________
 
+.. currentmodule:: saltext.pushover.returners
+
 .. autosummary::
     :toctree:
 
-    saltext.pushover.returners.pushover_returner
+    pushover_returner

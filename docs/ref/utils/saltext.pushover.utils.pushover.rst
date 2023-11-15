@@ -1,4 +1,3 @@
-
 saltext.pushover.utils.pushover
 ===============================
 
