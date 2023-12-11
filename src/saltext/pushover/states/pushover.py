@@ -46,8 +46,8 @@ def post_message(
     priority=None,
     expire=None,
     retry=None,
-    sound=None,
-    api_version=1,
+    sound=None,  # pylint: disable=unused-argument
+    api_version=1,  # pylint: disable=unused-argument
     token=None,
 ):
     """

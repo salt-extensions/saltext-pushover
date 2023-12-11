@@ -156,7 +156,7 @@ def _post_message(
     expire,
     retry,
     sound,
-    api_version=1,
+    api_version=1,  # pylint: disable=unused-argument
     token=None,
 ):
     """
