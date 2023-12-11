@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 def query(
     function,
-    token=None,
+    token=None,  # pylint: disable=unused-argument
     api_version="1",
     method="POST",
     header_dict=None,
