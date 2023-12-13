@@ -1,8 +1,8 @@
 .. all-saltext.pushover.utils:
 
-____________
-Util Modules
-____________
+_________
+Utilities
+_________
 
 .. currentmodule:: saltext.pushover.utils
 
