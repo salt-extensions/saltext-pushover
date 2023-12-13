@@ -1,11 +1,25 @@
-Welcome to pushover Documentation!
-==================================
+``saltext-pushover``: Integrate Salt with Pushover
+==================================================
+
+Salt Extension for interacting with Pushover
 
 .. toctree::
   :maxdepth: 2
-  :caption: Contents:
+  :caption: Provided Modules
+  :hidden:
 
-  all.rst
+  ref/modules/index
+  ref/returners/index
+  ref/states/index
+  ref/utils/index
+
+.. toctree::
+  :maxdepth: 2
+  :caption: News
+  :hidden:
+
+  changelog
+
 
 Indices and tables
 ==================

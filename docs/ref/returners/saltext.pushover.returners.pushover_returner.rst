@@ -1,5 +1,5 @@
-saltext.pushover.returners.pushover_returner
-============================================
+``pushover``
+============
 
 .. automodule:: saltext.pushover.returners.pushover_returner
     :members:
