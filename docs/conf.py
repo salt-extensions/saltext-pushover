@@ -94,9 +94,10 @@ extensions = [
     "sphinxcontrib.spelling",
     "sphinxcontrib.towncrier.ext",
     "myst_parser",
+    "sphinx_inline_tabs",
 ]
 
-myst_extensions = [
+myst_enable_extensions = [
     "colon_fence",
     "deflist",
     "tasklist",
