@@ -45,6 +45,7 @@ content-type = "text/markdown"
 
 [project.urls]
 Homepage = "https://github.com/salt-extensions/saltext-pushover"
+Documentation = "https://salt-extensions.github.io/saltext-pushover/"
 Source = "https://github.com/salt-extensions/saltext-pushover"
 Tracker = "https://github.com/salt-extensions/saltext-pushover/issues"
 
