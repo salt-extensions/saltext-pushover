@@ -4,7 +4,7 @@ _commit: 0.2.9
 _src_path: https://github.com/salt-extensions/salt-extension-copier
 author: jeanluc
 author_email: lkubb@protonmail.com
-docs_url: ''
+docs_url: https://salt-extensions.github.io/saltext-pushover/
 license: apache
 loaders:
   - module
