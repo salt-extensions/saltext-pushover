@@ -1,7 +1,5 @@
 """
-Library for interacting with Pushover API
-
-.. versionadded:: 2016.3.0
+Utility functions for interacting with the Pushover API.
 """
 
 import http.client
@@ -10,7 +8,6 @@ from urllib.parse import urlencode
 from urllib.parse import urljoin
 
 import salt.utils.http
-from salt.version import __version__
 
 log = logging.getLogger(__name__)
 
@@ -26,11 +23,11 @@ def query(
     opts=None,
 ):
     """
-    PushOver object method function to construct and execute on the API URL.
+    Query the Pushover API.
 
-    :param token:       The PushOver api key.
-    :param api_version: The PushOver API version to use, defaults to version 1.
-    :param function:    The PushOver api function to perform.
+    :param token:       The Pushover API key. **Ignored**. FIXME
+    :param api_version: The Pushover API version to use, defaults to version 1. (There is only version 1 FIXME).
+    :param function:    The Pushover API function to perform.
     :param method:      The HTTP method, e.g. GET or POST.
     :param data:        The data to be sent for POST method.
     :return:            The json response from the API call or False.
@@ -90,9 +87,10 @@ def query(
 
 def validate_sound(sound, token):
     """
-    Send a message to a Pushover user or group.
+    Validate that a specified sound value exists.
+
     :param sound:       The sound that we want to verify
-    :param token:       The PushOver token.
+    :param token:       The Pushover token.
     """
     ret = {"message": "Sound is invalid", "res": False}
     parameters = dict()
@@ -119,10 +117,12 @@ def validate_sound(sound, token):
 
 def validate_user(user, device, token):
     """
-    Send a message to a Pushover user or group.
+    Validate that a user/group ID (key) exists and has at least one active device.
+    If ``device`` is not falsy, additionally validate that the device exists in the account.
+
     :param user:        The user or group name, either will work.
     :param device:      The device for the user.
-    :param token:       The PushOver token.
+    :param token:       The Pushover token.
     """
     res = {"message": "User key is invalid", "result": False}
 

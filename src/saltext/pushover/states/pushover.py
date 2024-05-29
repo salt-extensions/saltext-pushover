@@ -1,39 +1,32 @@
 """
-Send a message to PushOver
-==========================
+Send notifications via `Pushover <https://www.pushover.net>`_ during state runs.
 
-This state is useful for sending messages to PushOver during state runs.
+.. important::
+    See :ref:`Configuration <pushover-setup>` for a description of
+    available configuration parameters.
 
-.. versionadded:: 2015.5.0
-
+Example
+-------
 .. code-block:: yaml
 
     pushover-message:
       pushover.post_message:
-        - user: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        - token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        - title: Salt Returner
+        - user: uQiRzpo4DXghDmr9QzzfQu27cmVRsG
+        - token: azGDORePK8gMaC0QOYAMyEEuzJnyUi
+        - title: Message from Salt
         - device: phone
         - priority: -1
         - expire: 3600
         - retry: 5
         - message: 'This state was executed successfully.'
-
-The api key can be specified in the master or minion configuration like below:
-.. code-block:: yaml
-
-    pushover:
-      token: peWcBiMOS9HrZG15peWcBiMOS9HrZG15
-
 """
+
+__virtualname__ = "pushover"
 
 
 def __virtual__():
-    """
-    Only load if the pushover module is available in __salt__
-    """
     if "pushover.post_message" in __salt__:
-        return "pushover"
+        return __virtualname__
     return (False, "pushover module could not be loaded")
 
 
@@ -51,67 +44,70 @@ def post_message(
     token=None,
 ):
     """
-    Send a message to a PushOver channel.
+    Send a message to a Pushover user or group.
 
     .. code-block:: yaml
 
         pushover-message:
           pushover.post_message:
-            - user: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            - token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            - title: Salt Returner
+            - user: uQiRzpo4DXghDmr9QzzfQu27cmVRsG
+            - token: azGDORePK8gMaC0QOYAMyEEuzJnyUi
+            - title: Message from Salt
             - device: phone
             - priority: -1
             - expire: 3600
             - retry: 5
 
-    The following parameters are required:
-
     name
-        The unique name for this event.
+        The name of the state. Irrelevant.
 
     user
-        The user or group of users to send the message to. Must be ID of user, not name
-        or email address.
+        The user or group of users to send the message to. Must be a user/group ID (key),
+        not a name or an email address.
+        Required (not read from the configuration FIXME).
 
     message
-        The message that is to be sent to the PushOver channel.
-
-    The following parameters are optional:
+        The message to send to the Pushover user or group. Required.
 
     title
-        The title to use for the message.
+        The message title to use.
 
     device
-        The device for the user to send the message to.
+        The name of the device to send the message to.
 
     priority
-        The priority for the message.
+        The priority of the message (integers between ``-2`` and ``2``).
+        Defaults to ``0``.
+
+        .. note::
+
+            Emergency priority (``2``) requires ``expire`` and ``retry`` parameters
+            to be set.
 
     expire
-        The message should expire after specified amount of seconds.
+        Stop notifying the user after the specified amount of seconds.
+        The message is still shown after expiry.
 
     retry
-        The message should be resent this many times.
+        Repeat the notification after this amount of seconds. Minimum: ``30``.
 
     token
-        The token for PushOver to use for authentication,
-        if not specified in the configuration options of master or minion.
-
+        The authentication token to use for the Pushover API.
+        Defaults to the one specified in the Salt configuration.
     """
     ret = {"name": name, "changes": {}, "result": False, "comment": ""}
 
     if __opts__["test"]:
-        ret["comment"] = f"The following message is to be sent to PushOver: {message}"
+        ret["comment"] = f"The following message is to be sent to Pushover: {message}"
         ret["result"] = None
         return ret
 
     if not user:
-        ret["comment"] = f"PushOver user is missing: {user}"
+        ret["comment"] = f"Pushover user is missing: {user}"
         return ret
 
     if not message:
-        ret["comment"] = f"PushOver message is missing: {message}"
+        ret["comment"] = f"Pushover message is missing: {message}"
         return ret
 
     result = __salt__["pushover.post_message"](

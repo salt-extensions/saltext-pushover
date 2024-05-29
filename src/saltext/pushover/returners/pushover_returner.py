@@ -1,82 +1,30 @@
 """
-Return salt data via pushover (http://www.pushover.net)
+Return Salt data via `Pushover <https://www.pushover.net>`_.
 
-.. versionadded:: 2016.3.0
+.. important::
+    See :ref:`Configuration <pushover-setup>` for a description of
+    available configuration parameters.
 
-The following fields can be set in the minion conf file::
+Usage
+-----
+To use the Pushover returner, pass ``--return pushover`` to the Salt command:
 
-    pushover.user (required)
-    pushover.token (required)
-    pushover.title (optional)
-    pushover.device (optional)
-    pushover.priority (optional)
-    pushover.expire (optional)
-    pushover.retry (optional)
-    pushover.profile (optional)
-
-.. note::
-    The ``user`` here is your **user key**, *not* the email address you use to
-    login to pushover.net.
-
-Alternative configuration values can be used by prefacing the configuration.
-Any values not found in the alternative configuration will be pulled from
-the default location::
-
-    alternative.pushover.user
-    alternative.pushover.token
-    alternative.pushover.title
-    alternative.pushover.device
-    alternative.pushover.priority
-    alternative.pushover.expire
-    alternative.pushover.retry
-
-PushOver settings may also be configured as::
-
-    pushover:
-        user: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        title: Salt Returner
-        device: phone
-        priority: -1
-        expire: 3600
-        retry: 5
-
-    alternative.pushover:
-        user: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        title: Salt Returner
-        device: phone
-        priority: 1
-        expire: 4800
-        retry: 2
-
-    pushover_profile:
-        pushover.token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-    pushover:
-        user: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        profile: pushover_profile
-
-    alternative.pushover:
-        user: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-        profile: pushover_profile
-
-  To use the PushOver returner, append '--return pushover' to the salt command. ex:
-
-  .. code-block:: bash
+.. code-block:: bash
 
     salt '*' test.ping --return pushover
 
-  To use the alternative configuration, append '--return_config alternative' to the salt command. ex:
+Alternative configuration profiles can be requested via the ``--return_config`` parameter:
+
+.. code-block:: bash
 
     salt '*' test.ping --return pushover --return_config alternative
 
-To override individual configuration items, append --return_kwargs '{"key:": "value"}' to the salt command.
+To override individual configuration items during the call, pass
+``--return_kwargs '{"key:": "value"}'`` to the Salt command.
 
 .. code-block:: bash
 
     salt '*' test.ping --return pushover --return_kwargs '{"title": "Salt is awesome!"}'
-
 """
 
 import logging
@@ -93,11 +41,11 @@ log = logging.getLogger(__name__)
 __virtualname__ = "pushover"
 
 
-def _get_options(ret=None):
-    """
-    Get the pushover options from salt.
-    """
+def __virtual__():
+    return __virtualname__
 
+
+def _get_options(ret=None):
     defaults = {"priority": "0"}
 
     attrs = {
@@ -140,15 +88,6 @@ def _get_options(ret=None):
     return _options
 
 
-def __virtual__():
-    """
-    Return virtual name of the module.
-
-    :return: The virtual name of the module.
-    """
-    return __virtualname__
-
-
 def _post_message(
     user,
     device,
@@ -163,13 +102,14 @@ def _post_message(
 ):
     """
     Send a message to a Pushover user or group.
+
     :param user:        The user or group to send to, must be key of user or group not email address.
-    :param message:     The message to send to the PushOver user or group.
+    :param message:     The message to send to the Pushover user or group.
     :param title:       Specify who the message is from.
     :param priority     The priority of the message, defaults to 0.
-    :param api_version: The PushOver API version, if not specified in the configuration.
+    :param api_version: The Pushover API version, if not specified in the configuration.
     :param notify:      Whether to notify the room, default: False.
-    :param token:       The PushOver token, if not specified in the configuration.
+    :param token:       The Pushover token, if not specified in the configuration.
     :return:            Boolean if message was sent successfully.
     """
 
@@ -205,7 +145,7 @@ def _post_message(
 
 def returner(ret):
     """
-    Send an PushOver message with the data
+    Send a Pushover notification with the return data.
     """
 
     _options = _get_options(ret)
