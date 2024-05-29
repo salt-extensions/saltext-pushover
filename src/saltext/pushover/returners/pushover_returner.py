@@ -78,13 +78,15 @@ To override individual configuration items, append --return_kwargs '{"key:": "va
     salt '*' test.ping --return pushover --return_kwargs '{"title": "Salt is awesome!"}'
 
 """
+
 import logging
 import pprint
 import urllib.parse
 
 import salt.returners
-import saltext.pushover.utils.pushover
 from salt.exceptions import SaltInvocationError
+
+import saltext.pushover.utils.pushover
 
 log = logging.getLogger(__name__)
 

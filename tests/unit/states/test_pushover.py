@@ -2,6 +2,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
+
 import saltext.pushover.modules.pushover_notify as pushover_exemod
 import saltext.pushover.states.pushover as po
 
