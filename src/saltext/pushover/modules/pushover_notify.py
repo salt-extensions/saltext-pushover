@@ -1,18 +1,9 @@
 """
-Module for sending messages to Pushover (https://www.pushover.net)
+Send notifications via `Pushover <https://www.pushover.net>`_.
 
-.. versionadded:: 2016.3.0
-
-:configuration: This module can be used by either passing an api key and version
-    directly or by specifying both in a configuration profile in the salt
-    master/minion config.
-
-    For example:
-
-    .. code-block:: yaml
-
-        pushover:
-          token: abAHuZyCLtdH8P4zhmFZmgUHUsv1ei8
+.. important::
+    See :ref:`Configuration <pushover-setup>` for a description of
+    available configuration parameters.
 """
 
 import logging
@@ -27,11 +18,6 @@ __virtualname__ = "pushover"
 
 
 def __virtual__():
-    """
-    Return virtual name of the module.
-
-    :return: The virtual name of the module.
-    """
     return __virtualname__
 
 
@@ -40,7 +26,7 @@ def post_message(
     device=None,
     message=None,
     title=None,
-    priority=None,
+    priority=0,
     expire=None,
     retry=None,
     sound=None,
@@ -50,25 +36,50 @@ def post_message(
     """
     Send a message to a Pushover user or group.
 
-    :param user:        The user or group to send to, must be key of user or group not email address.
-    :param message:     The message to send to the PushOver user or group.
-    :param title:       Specify who the message is from.
-    :param priority:    The priority of the message, defaults to 0.
-    :param expire:      The message should expire after N number of seconds.
-    :param retry:       The number of times the message should be retried.
-    :param sound:       The sound to associate with the message.
-    :param api_version: The PushOver API version, if not specified in the configuration.
-    :param token:       The PushOver token, if not specified in the configuration.
-    :return:            Boolean if message was sent successfully.
-
     CLI Example:
 
     .. code-block:: bash
 
-        salt '*' pushover.post_message user='xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' title='Message from Salt' message='Build is done'
+        salt '*' pushover.post_message user='uQiRzpo4DXghDmr9QzzfQu27cmVRsG' title='Message from Salt' message='Build is done'
 
-        salt '*' pushover.post_message user='xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' title='Message from Salt' message='Build is done' priority='2' expire='720' retry='5'
+        salt '*' pushover.post_message user='uQiRzpo4DXghDmr9QzzfQu27cmVRsG' title='Message from Salt' message='Build is done' priority='2' expire='720' retry='5'
 
+    user
+        The user or group of users to send the message to. Must be a user/group ID (key),
+        not a name or an email address.
+        Required if not specified in the configuration.
+
+    device
+        The name of the device to send the message to.
+
+    message
+        The message to send to the Pushover user or group. Required.
+
+    title
+        The message title to use. Defaults to ``Message from SaltStack``.
+
+    priority
+        The priority of the message (integers between ``-2`` and ``2``).
+        Defaults to ``0``.
+
+        .. note::
+
+            Emergency priority (``2``) requires ``expire`` and ``retry`` parameters
+            to be set.
+
+    expire
+        Stop notifying the user after the specified amount of seconds.
+        The message is still shown after expiry.
+
+    retry
+        Repeat the notification after this amount of seconds. Minimum: ``30``.
+
+    sound
+        The `notification sound <https://pushover.net/api#sounds>`_ to play.
+
+    token
+        The authentication token to use for the Pushover API.
+        Required if not specified in the configuration.
     """
 
     if not token:
@@ -84,6 +95,19 @@ def post_message(
     if not message:
         raise SaltInvocationError('Required parameter "message" is missing.')
 
+    if priority not in range(-2, 3):
+        raise SaltInvocationError(
+            f"Invalid priority {priority}. Needs to be an integer between -2 and 2 (inclusive)"
+        )
+
+    if priority == 2 and not (expire and retry):
+        raise SaltInvocationError(
+            "Emergency messages require `expire` and `retry` parameters to be set"
+        )
+
+    if retry and retry < 30:
+        raise SaltInvocationError("`retry` needs to be at least 30 (seconds)")
+
     user_validate = saltext.pushover.utils.pushover.validate_user(user, device, token)
     if not user_validate["result"]:
         return user_validate
@@ -93,12 +117,15 @@ def post_message(
 
     parameters = dict()
     parameters["user"] = user
-    parameters["device"] = device
+    if device is not None:
+        parameters["device"] = device
     parameters["token"] = token
     parameters["title"] = title
     parameters["priority"] = priority
-    parameters["expire"] = expire
-    parameters["retry"] = retry
+    if expire is not None:
+        parameters["expire"] = expire
+    if retry is not None:
+        parameters["retry"] = retry
     parameters["message"] = message
 
     if sound and saltext.pushover.utils.pushover.validate_sound(sound, token)["res"]:

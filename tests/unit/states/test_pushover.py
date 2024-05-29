@@ -47,7 +47,7 @@ def test_pushover_state(test_mode, post_message):
             message=message,
             title=None,
             device=None,
-            priority=None,
+            priority=0,
             expire=None,
             retry=None,
             token=None,

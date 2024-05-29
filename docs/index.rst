@@ -9,6 +9,7 @@ Salt Extension for interacting with Pushover
   :hidden:
 
   topics/installation
+  topics/configuration
 
 .. toctree::
   :maxdepth: 2
