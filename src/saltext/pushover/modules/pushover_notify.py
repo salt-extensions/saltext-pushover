@@ -14,11 +14,13 @@ Module for sending messages to Pushover (https://www.pushover.net)
         pushover:
           token: abAHuZyCLtdH8P4zhmFZmgUHUsv1ei8
 """
+
 import logging
 import urllib.parse
 
-import saltext.pushover.utils.pushover
 from salt.exceptions import SaltInvocationError
+
+import saltext.pushover.utils.pushover
 
 log = logging.getLogger(__name__)
 __virtualname__ = "pushover"

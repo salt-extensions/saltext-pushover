@@ -3,6 +3,7 @@ Library for interacting with Pushover API
 
 .. versionadded:: 2016.3.0
 """
+
 import http.client
 import logging
 from urllib.parse import urlencode
