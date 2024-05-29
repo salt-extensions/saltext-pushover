@@ -36,7 +36,7 @@ def post_message(
     device=None,
     message=None,
     title=None,
-    priority=None,
+    priority=0,
     expire=None,
     retry=None,
     sound=None,  # pylint: disable=unused-argument
@@ -64,7 +64,7 @@ def post_message(
     user
         The user or group of users to send the message to. Must be a user/group ID (key),
         not a name or an email address.
-        Required (not read from the configuration FIXME).
+        Required if not specified in the configuration.
 
     message
         The message to send to the Pushover user or group. Required.
@@ -93,7 +93,7 @@ def post_message(
 
     token
         The authentication token to use for the Pushover API.
-        Defaults to the one specified in the Salt configuration.
+        Required if not specified in the configuration.
     """
     ret = {"name": name, "changes": {}, "result": False, "comment": ""}
 
@@ -103,8 +103,10 @@ def post_message(
         return ret
 
     if not user:
-        ret["comment"] = f"Pushover user is missing: {user}"
-        return ret
+        user = __salt__["config.get"]("pushover.user") or __salt__["config.get"]("pushover:user")
+        if not user:
+            ret["comment"] = f"Pushover user is missing: {user}"
+            return ret
 
     if not message:
         ret["comment"] = f"Pushover message is missing: {message}"

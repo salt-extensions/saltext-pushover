@@ -26,7 +26,7 @@ def post_message(
     device=None,
     message=None,
     title=None,
-    priority=None,
+    priority=0,
     expire=None,
     retry=None,
     sound=None,
@@ -95,6 +95,19 @@ def post_message(
     if not message:
         raise SaltInvocationError('Required parameter "message" is missing.')
 
+    if priority not in range(-2, 3):
+        raise SaltInvocationError(
+            f"Invalid priority {priority}. Needs to be an integer between -2 and 2 (inclusive)"
+        )
+
+    if priority == 2 and not (expire and retry):
+        raise SaltInvocationError(
+            "Emergency messages require `expire` and `retry` parameters to be set"
+        )
+
+    if retry and retry < 30:
+        raise SaltInvocationError("`retry` needs to be at least 30 (seconds)")
+
     user_validate = saltext.pushover.utils.pushover.validate_user(user, device, token)
     if not user_validate["result"]:
         return user_validate
@@ -104,12 +117,15 @@ def post_message(
 
     parameters = dict()
     parameters["user"] = user
-    parameters["device"] = device
+    if device is not None:
+        parameters["device"] = device
     parameters["token"] = token
     parameters["title"] = title
     parameters["priority"] = priority
-    parameters["expire"] = expire
-    parameters["retry"] = retry
+    if expire is not None:
+        parameters["expire"] = expire
+    if retry is not None:
+        parameters["retry"] = retry
     parameters["message"] = message
 
     if sound and saltext.pushover.utils.pushover.validate_sound(sound, token)["res"]:

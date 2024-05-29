@@ -119,12 +119,15 @@ def _post_message(
 
     parameters = dict()
     parameters["user"] = user
-    parameters["device"] = device
+    if device is not None:
+        parameters["device"] = device
     parameters["token"] = token
     parameters["title"] = title
     parameters["priority"] = priority
-    parameters["expire"] = expire
-    parameters["retry"] = retry
+    if expire is not None:
+        parameters["expire"] = expire
+    if retry is not None:
+        parameters["retry"] = retry
     parameters["message"] = message
 
     if sound:
