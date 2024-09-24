@@ -426,16 +426,6 @@ confidence=HIGH,
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-<<<<<<< before updating
-disable=R,
-  wrong-import-order,
-  line-too-long,
-  too-many-lines,
-  fixme,
-  # salt.utils.args.get_function_argspec doesn't work with this
-  keyword-arg-before-vararg,
-  import-error,
-=======
 disable=duplicate-code,
         fixme,
         keyword-arg-before-vararg,
@@ -448,7 +438,6 @@ disable=duplicate-code,
         too-few-public-methods,
         ungrouped-imports,
         wrong-import-position
->>>>>>> after updating
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
