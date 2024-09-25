@@ -117,7 +117,7 @@ def _post_message(
     if not user_validate["result"]:
         return user_validate
 
-    parameters = dict()
+    parameters = {}
     parameters["user"] = user
     if device is not None:
         parameters["device"] = device
@@ -198,4 +198,3 @@ def returner(ret):
     log.debug("pushover result %s", result)
     if not result["res"]:
         log.info("Error: %s", result["message"])
-    return

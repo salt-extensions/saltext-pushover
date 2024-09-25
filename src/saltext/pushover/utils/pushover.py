@@ -74,15 +74,14 @@ def query(
             ret["res"] = False
         ret["message"] = result
         return ret
-    else:
-        try:
-            if "response" in result and result[response] == 0:
-                ret["res"] = False
-            ret["message"] = result
-        except ValueError:
+    try:
+        if "response" in result and result[response] == 0:
             ret["res"] = False
-            ret["message"] = result
-        return ret
+        ret["message"] = result
+    except ValueError:
+        ret["res"] = False
+        ret["message"] = result
+    return ret
 
 
 def validate_sound(sound, token):
@@ -93,7 +92,7 @@ def validate_sound(sound, token):
     :param token:       The Pushover token.
     """
     ret = {"message": "Sound is invalid", "res": False}
-    parameters = dict()
+    parameters = {}
     parameters["token"] = token
 
     response = query(function="validate_sound", method="GET", query_params=parameters)
@@ -126,7 +125,7 @@ def validate_user(user, device, token):
     """
     res = {"message": "User key is invalid", "result": False}
 
-    parameters = dict()
+    parameters = {}
     parameters["user"] = user
     parameters["token"] = token
     if device:

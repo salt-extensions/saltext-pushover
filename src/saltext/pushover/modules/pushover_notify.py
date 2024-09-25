@@ -115,7 +115,7 @@ def post_message(
     if not title:
         title = "Message from SaltStack"
 
-    parameters = dict()
+    parameters = {}
     parameters["user"] = user
     if device is not None:
         parameters["device"] = device
@@ -141,5 +141,4 @@ def post_message(
 
     if result["res"]:
         return True
-    else:
-        return result
+    return result
