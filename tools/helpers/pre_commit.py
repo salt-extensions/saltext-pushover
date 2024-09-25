@@ -68,11 +68,15 @@ def run_pre_commit(venv, retries=2):
     Usually, a maximum of two runs is necessary (if a hook reformats the
     output of another later one again).
     """
+    new_files = set()
 
     def _run_pre_commit_loop(retries_left):
+        untracked_files = set(map(str, list_untracked()))
+        nonlocal new_files
+        new_files = new_files.union(untracked_files)
         # Ensure pre-commit runs on all paths.
         # We don't want to git add . because this removes merge conflicts
-        git("add", "--intent-to-add", *map(str, list_untracked()))
+        git("add", "--intent-to-add", *untracked_files)
         with local.venv(venv):
             try:
                 local["python"]("-m", "pre_commit", "run", "--all-files")
@@ -97,4 +101,7 @@ def run_pre_commit(venv, retries=2):
         prompt.warn(f"Pre-commit is failing. {msg}")
         for i, failing_hook in enumerate(failing):
             prompt.warn(f"✗ Failing hook ({i + 1}): {failing_hook}", failing[failing_hook])
+    finally:
+        # Undo git add --intent-to-add to allow RenovateBot to detect new files correctly
+        git("restore", "--staged", *new_files)
     return False
