@@ -1,5 +1,5 @@
 """
-Return Salt data via `Pushover <https://www.pushover.net>`_.
+Return Salt data via `Pushover <https://pushover.net>`_.
 
 .. important::
     See :ref:`Configuration <pushover-setup>` for a description of

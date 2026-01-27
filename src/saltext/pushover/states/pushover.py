@@ -1,5 +1,5 @@
 """
-Send notifications via `Pushover <https://www.pushover.net>`_ during state runs.
+Send notifications via `Pushover <https://pushover.net>`_ during state runs.
 
 .. important::
     See :ref:`Configuration <pushover-setup>` for a description of
