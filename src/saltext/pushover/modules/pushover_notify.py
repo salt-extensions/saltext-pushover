@@ -1,5 +1,5 @@
 """
-Send notifications via `Pushover <https://www.pushover.net>`_.
+Send notifications via `Pushover <https://pushover.net>`_.
 
 .. important::
     See :ref:`Configuration <pushover-setup>` for a description of
