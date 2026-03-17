@@ -29,7 +29,7 @@ def test_mode(request):
 
 def test_pushover_state(test_mode, post_message):
     message = "Chaos is a ladder"
-    ret = po.post_message("event", "user", message=message)
+    ret = po.post_message(name="event", message=message, user="user")
     assert isinstance(ret, dict)
     assert ret["name"] == "event"
     assert not ret["changes"]
@@ -43,12 +43,13 @@ def test_pushover_state(test_mode, post_message):
         assert ret["result"] is True
         assert ret["comment"].startswith("Sent message")
         post_message.assert_called_once_with(
-            user="user",
-            message=message,
+            message,
             title=None,
+            user="user",
             device=None,
             priority=0,
             expire=None,
             retry=None,
+            sound=None,
             token=None,
         )
