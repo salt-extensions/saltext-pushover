@@ -29,12 +29,12 @@ To override individual configuration items during the call, pass
 
 import logging
 import pprint
-import urllib.parse
 
 import salt.returners
+from salt.exceptions import CommandExecutionError
 from salt.exceptions import SaltInvocationError
 
-import saltext.pushover.utils.pushover
+from saltext.pushover.utils import pushover
 
 log = logging.getLogger(__name__)
 
@@ -109,15 +109,12 @@ def _post_message(
     :return:            Boolean if message was sent successfully.
     """
 
-    user_validate = saltext.pushover.utils.pushover.validate_user(user, device, token)
-    if not user_validate["result"]:
-        return user_validate
+    pushover.validate_user(user, token, device=device, context=__context__, opts=__opts__)
 
     parameters = {}
     parameters["user"] = user
     if device is not None:
         parameters["device"] = device
-    parameters["token"] = token
     parameters["title"] = title
     parameters["priority"] = priority
     if expire is not None:
@@ -126,20 +123,15 @@ def _post_message(
         parameters["retry"] = retry
     parameters["message"] = message
 
-    if sound:
-        sound_validate = saltext.pushover.utils.pushover.validate_sound(sound, token)
-        if sound_validate["res"]:
-            parameters["sound"] = sound
+    if sound and pushover.validate_sound(sound, token):
+        parameters["sound"] = sound
 
-    result = saltext.pushover.utils.pushover.query(
-        function="message",
-        method="POST",
-        header_dict={"Content-Type": "application/x-www-form-urlencoded"},
-        data=urllib.parse.urlencode(parameters),
+    return pushover.query(
+        "messages",
+        token=token,
+        data=parameters,
         opts=__opts__,
     )
-
-    return result
 
 
 def returner(ret):
@@ -179,18 +171,18 @@ def returner(ret):
         pprint.pformat(ret.get("return")),
     )
 
-    result = _post_message(
-        user=user,
-        device=device,
-        message=message,
-        title=title,
-        priority=priority,
-        expire=expire,
-        retry=retry,
-        sound=sound,
-        token=token,
-    )
-
-    log.debug("pushover result %s", result)
-    if not result["res"]:
-        log.info("Error: %s", result["message"])
+    try:
+        res = _post_message(
+            user=user,
+            device=device,
+            message=message,
+            title=title,
+            priority=priority,
+            expire=expire,
+            retry=retry,
+            sound=sound,
+            token=token,
+        )
+        log.debug("Pushover result: %s", res)
+    except CommandExecutionError as err:
+        log.info("Error: %s", err)

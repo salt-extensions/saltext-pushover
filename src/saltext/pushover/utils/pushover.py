@@ -2,53 +2,99 @@
 Utility functions for interacting with the Pushover API.
 """
 
-import http.client
 import logging
-from urllib.parse import urlencode
-from urllib.parse import urljoin
 
 import salt.utils.http
+import salt.utils.json
+from salt.exceptions import CommandExecutionError
 
 log = logging.getLogger(__name__)
 
+API_URL = "https://api.pushover.net"
+
+
+class PushoverAPIError(CommandExecutionError):
+    """
+    Generic exception to render Pushover API errors.
+    """
+
+    status: int
+    res: dict
+    raw: str | None
+
+    def __init__(self, status: int, res: dict | None = None, raw: str | None = None):
+        res = res or {}
+        self.status = status
+        self.res = res
+        self.raw = raw
+
+        msg = f"Pushover API Error (HTTP {status}): "
+        if "errors" in res:
+            msg += "; ".join(res["errors"])
+        elif self.raw:
+            msg += self.raw
+        else:
+            msg += "(no further description)"
+        super().__init__(msg)
+
 
 def query(
-    function,
-    token=None,
-    api_version="1",
+    endpoint,
     method="POST",
-    header_dict=None,
+    *,
     data=None,
     query_params=None,
+    token=None,
+    api_version="1",
+    header_dict=None,
     opts=None,
 ):
     """
+    .. versionchanged:: 2.0.0
+        * Parameters have been reordered.
+        * Uses JSON request bodies by default.
+        * Errors result in exceptions.
+        * Returns the decoded response data only.
+
     Query the Pushover API.
 
-    :param token:       The Pushover API key. **Ignored**. FIXME
-    :param api_version: The Pushover API version to use, defaults to version 1. (There is only version 1 FIXME).
-    :param function:    The Pushover API function to perform.
-    :param method:      The HTTP method, e.g. GET or POST.
-    :param data:        The data to be sent for POST method.
-    :return:            The json response from the API call or False.
+    endpoint
+        API endpoint to query (without ``.json`` suffix), e.g. ``messages``.
+
+        .. versionchanged:: 2.0.0
+            Previously, the first parameter was an internally defined identifier.
+            This accepts all API paths.
+
+    method
+        HTTP method. Defaults to ``POST``.
+
+    data
+        Request body data.
+
+        .. versionchanged:: 2.0.0
+            Automatically dumped to JSON, unless the ``Content-Type`` header
+            is set explicitly in ``header_dict``.
+
+    query_params
+        URI query parameter dictionary.
+
+    token
+        Pushover API token.
+        Optional if already specified in ``data`` or ``query_params``,
+        depending on the method. Overrides them.
+
+    api_version
+        API version. Used for building query URI. Defaults to ``1``.
+
+    header_dict
+        HTTP request headers to add.
+
+    opts
+        Pass through ``__opts__`` to respect Salt HTTP configuration.
     """
+    query_params = query_params or {}
 
-    ret = {"message": "", "res": True}
-
-    pushover_functions = {
-        "message": {"request": "messages.json", "response": "status"},
-        "validate_user": {"request": "users/validate.json", "response": "status"},
-        "validate_sound": {"request": "sounds.json", "response": "status"},
-    }
-
-    api_url = "https://api.pushover.net"
-    base_url = urljoin(api_url, api_version + "/")
-    path = pushover_functions.get(function).get("request")
-    url = urljoin(base_url, path, False)
-
-    if not query_params:
-        query_params = {}
-
+    decode = method != "DELETE"
     if token:
         if method == "GET":
             query_params["token"] = token
@@ -56,12 +102,14 @@ def query(
             data = data or {}
             data["token"] = token
 
-    decode = True
-    if method == "DELETE":
-        decode = False
+    header_dict = header_dict or {}
+    if method != "GET" and "Content-Type" not in header_dict:
+        header_dict["Content-Type"] = "application/json"
+        if data:
+            data = salt.utils.json.dumps(data)
 
     result = salt.utils.http.query(
-        url,
+        f"{API_URL}/{api_version}/{endpoint}.json",
         method,
         params=query_params,
         data=data,
@@ -70,89 +118,101 @@ def query(
         decode_type="json",
         text=True,
         status=True,
-        cookies=True,
-        persist_session=True,
         opts=opts,
     )
+    if decode and "dict" not in result:
+        # Salt does not decode the body if the status indicates an error
+        try:
+            result["dict"] = salt.utils.json.loads(result["body"])
+        except ValueError:
+            result["dict"] = {}
 
-    if result.get("status", None) == http.client.OK:
-        response = pushover_functions.get(function).get("response")
-        if response in result and result[response] == 0:
-            ret["res"] = False
-        ret["message"] = result
-        return ret
-    try:
-        if "response" in result and result[response] == 0:
-            ret["res"] = False
-        ret["message"] = result
-    except ValueError:
-        ret["res"] = False
-        ret["message"] = result
-    return ret
+    if result["status"] >= 400:
+        raise PushoverAPIError(result["status"], result.get("dict"), result.get("text"))
+    if decode:
+        return result["dict"]
+    return result["text"]
 
 
-def validate_sound(sound, token):
+def validate_sound(sound, token, *, context=None, opts=None):
     """
     Validate that a specified sound value exists.
 
-    :param sound:       The sound that we want to verify
-    :param token:       The Pushover token.
+    sound
+        Sound to verify
+
+    token
+        Pushover API token
+
+    context
+        Pass through ``__context__`` to allow caching.
+
+        .. versionadded:: 2.0.0
+
+    opts
+        Pass through ``__opts__`` to respect Salt HTTP configuration.
+
+        .. versionadded:: 2.0.0
     """
-    ret = {"message": "Sound is invalid", "res": False}
-    parameters = {}
-    parameters["token"] = token
-
-    response = query(function="validate_sound", method="GET", query_params=parameters)
-
-    if response["res"]:
-        if "message" in response:
-            _message = response.get("message", "")
-            if "status" in _message:
-                if _message.get("dict", {}).get("status", "") == 1:
-                    sounds = _message.get("dict", {}).get("sounds", "")
-                    if sound in sounds:
-                        ret["message"] = f"Valid sound {sound}."
-                        ret["res"] = True
-                    else:
-                        ret["message"] = f"Warning: {sound} not a valid sound."
-                        ret["res"] = False
-                else:
-                    ret["message"] = "".join(_message.get("dict", {}).get("errors"))
-    return ret
+    context = context or {}
+    if "pushover_sounds" in context:
+        sounds = context["pushover_sounds"]
+    else:
+        sounds = query("sounds", "GET", token=token, opts=opts)["sounds"]
+        context["pushover_sounds"] = sounds
+    return sound in sounds
 
 
-def validate_user(user, device, token):
+def validate_user(user, token, device=None, *, context=None, opts=None):
     """
     Validate that a user/group ID (key) exists and has at least one active device.
     If ``device`` is not falsy, additionally validate that the device exists in the account.
 
-    :param user:        The user or group name, either will work.
-    :param device:      The device for the user.
-    :param token:       The Pushover token.
+    user
+        User or group name to validate. Required.
+
+    token
+        Pushover API token. Required.
+
+    device
+        Optional device for ``user`` to validate.
+        If unspecified, checks whether any device is available.
+
+    context
+        Pass through ``__context__`` to allow caching.
+
+        .. versionadded:: 2.0.0
+
+    opts
+        Pass through ``__opts__`` to respect Salt HTTP configuration.
+
+        .. versionadded:: 2.0.0
     """
-    res = {"message": "User key is invalid", "result": False}
+    ckey = (user, token, device)
+    context = context or {}
+    if ckey in context:
+        return True
 
-    parameters = {}
-    parameters["user"] = user
-    parameters["token"] = token
+    payload = {"user": user}
     if device:
-        parameters["device"] = device
+        payload["device"] = device
 
-    response = query(
-        function="validate_user",
-        method="POST",
-        header_dict={"Content-Type": "application/x-www-form-urlencoded"},
-        data=urlencode(parameters),
-    )
+    try:
+        query(
+            endpoint="users/validate",
+            data=payload,
+            token=token,
+            opts=opts,
+        )
+    except PushoverAPIError as err:
+        if "invalid" in err.res.get("user", ""):
+            raise CommandExecutionError(f"Pushover: Invalid user '{user}'") from err
+        if "invalid" in err.res.get("device", ""):
+            raise CommandExecutionError(
+                f"Pushover: Invalid device '{device}' for user '{user}'"
+            ) from err
+        raise
 
-    if response["res"]:
-        if "message" in response:
-            _message = response.get("message", "")
-            if "status" in _message:
-                if _message.get("dict", {}).get("status", None) == 1:
-                    res["result"] = True
-                    res["message"] = "User key is valid."
-                else:
-                    res["result"] = False
-                    res["message"] = "".join(_message.get("dict", {}).get("errors"))
-    return res
+    # Only cache successful lookups to avoid false negatives
+    context[ckey] = True
+    return True

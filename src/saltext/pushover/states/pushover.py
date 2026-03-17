@@ -24,6 +24,9 @@ Example
 __virtualname__ = "pushover"
 
 
+from salt.exceptions import CommandExecutionError
+
+
 def __virtual__():
     if "pushover.post_message" in __salt__:
         return __virtualname__
@@ -111,21 +114,22 @@ def post_message(
         ret["comment"] = f"Pushover message is missing: {message}"
         return ret
 
-    result = __salt__["pushover.post_message"](
-        user=user,
-        message=message,
-        title=title,
-        device=device,
-        priority=priority,
-        expire=expire,
-        retry=retry,
-        token=token,
-    )
-
-    if result:
+    try:
+        __salt__["pushover.post_message"](
+            user=user,
+            message=message,
+            title=title,
+            device=device,
+            priority=priority,
+            expire=expire,
+            retry=retry,
+            token=token,
+        )
+    except CommandExecutionError as err:
+        ret["result"] = False
+        ret["comment"] = "Failed to send message '{name}'! Error: " + str(err)
+    else:
         ret["result"] = True
         ret["comment"] = f"Sent message: {name}"
-    else:
-        ret["comment"] = f"Failed to send message: {name}"
 
     return ret

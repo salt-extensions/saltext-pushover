@@ -7,13 +7,13 @@ Send notifications via `Pushover <https://pushover.net>`_.
 """
 
 import logging
-import urllib.parse
 
 from salt.exceptions import SaltInvocationError
 
-import saltext.pushover.utils.pushover
+from saltext.pushover.utils import pushover
 
 log = logging.getLogger(__name__)
+
 __virtualname__ = "pushover"
 
 
@@ -107,9 +107,7 @@ def post_message(
     if retry and retry < 30:
         raise SaltInvocationError("`retry` needs to be at least 30 (seconds)")
 
-    user_validate = saltext.pushover.utils.pushover.validate_user(user, device, token)
-    if not user_validate["result"]:
-        return user_validate
+    pushover.validate_user(user, token, device, context=__context__, opts=__opts__)
 
     if not title:
         title = "Message from SaltStack"
@@ -118,7 +116,6 @@ def post_message(
     parameters["user"] = user
     if device is not None:
         parameters["device"] = device
-    parameters["token"] = token
     parameters["title"] = title
     parameters["priority"] = priority
     if expire is not None:
@@ -127,17 +124,13 @@ def post_message(
         parameters["retry"] = retry
     parameters["message"] = message
 
-    if sound and saltext.pushover.utils.pushover.validate_sound(sound, token)["res"]:
+    if sound and pushover.validate_sound(sound, token, context=__context__, opts=__opts__):
         parameters["sound"] = sound
 
-    result = saltext.pushover.utils.pushover.query(
-        function="message",
-        method="POST",
-        header_dict={"Content-Type": "application/x-www-form-urlencoded"},
-        data=urllib.parse.urlencode(parameters),
+    pushover.query(
+        endpoint="messages",
+        token=token,
+        data=parameters,
         opts=__opts__,
     )
-
-    if result["res"]:
-        return True
-    return result
+    return True
