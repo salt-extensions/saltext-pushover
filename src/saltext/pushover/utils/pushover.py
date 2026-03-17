@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 def query(
     function,
-    token=None,  # pylint: disable=unused-argument
+    token=None,
     api_version="1",
     method="POST",
     header_dict=None,
@@ -48,6 +48,13 @@ def query(
 
     if not query_params:
         query_params = {}
+
+    if token:
+        if method == "GET":
+            query_params["token"] = token
+        else:
+            data = data or {}
+            data["token"] = token
 
     decode = True
     if method == "DELETE":
