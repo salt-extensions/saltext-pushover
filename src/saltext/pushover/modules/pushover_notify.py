@@ -30,7 +30,6 @@ def post_message(
     expire=None,
     retry=None,
     sound=None,
-    api_version=1,  # pylint: disable=unused-argument
     token=None,
 ):
     """
