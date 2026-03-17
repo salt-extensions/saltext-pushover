@@ -24,6 +24,9 @@ Example
 __virtualname__ = "pushover"
 
 
+from salt.exceptions import CommandExecutionError
+
+
 def __virtual__():
     if "pushover.post_message" in __salt__:
         return __virtualname__
@@ -32,15 +35,14 @@ def __virtual__():
 
 def post_message(
     name,
+    message,
+    title=None,
     user=None,
     device=None,
-    message=None,
-    title=None,
     priority=0,
     expire=None,
     retry=None,
-    sound=None,  # pylint: disable=unused-argument
-    api_version=1,  # pylint: disable=unused-argument
+    sound=None,
     token=None,
 ):
     """
@@ -57,26 +59,27 @@ def post_message(
             - priority: -1
             - expire: 3600
             - retry: 5
+            - message: 'This state was executed successfully.'
 
     name
         The name of the state. Irrelevant.
 
+    message
+        Message text to send. Required.
+
+    title
+        Message title. Defaults to ``Message from Salt``.
+
     user
-        The user or group of users to send the message to. Must be a user/group ID (key),
+        User or group of users to send the message to. Must be a user/group ID (key),
         not a name or an email address.
         Required if not specified in the configuration.
 
-    message
-        The message to send to the Pushover user or group. Required.
-
-    title
-        The message title to use.
-
     device
-        The name of the device to send the message to.
+        Name of the device to send the message to. Defaults to all devices of the user.
 
     priority
-        The priority of the message (integers between ``-2`` and ``2``).
+        Message priority (integers between ``-2`` and ``2``).
         Defaults to ``0``.
 
         .. note::
@@ -91,8 +94,11 @@ def post_message(
     retry
         Repeat the notification after this amount of seconds. Minimum: ``30``.
 
+    sound
+        `Notification sound <https://pushover.net/api#sounds>`_ to play. Defaults to user default.
+
     token
-        The authentication token to use for the Pushover API.
+        Pushover API key.
         Required if not specified in the configuration.
     """
     ret = {"name": name, "changes": {}, "result": False, "comment": ""}
@@ -102,31 +108,23 @@ def post_message(
         ret["result"] = None
         return ret
 
-    if not user:
-        user = __salt__["config.get"]("pushover.user") or __salt__["config.get"]("pushover:user")
-        if not user:
-            ret["comment"] = f"Pushover user is missing: {user}"
-            return ret
-
-    if not message:
-        ret["comment"] = f"Pushover message is missing: {message}"
-        return ret
-
-    result = __salt__["pushover.post_message"](
-        user=user,
-        message=message,
-        title=title,
-        device=device,
-        priority=priority,
-        expire=expire,
-        retry=retry,
-        token=token,
-    )
-
-    if result:
+    try:
+        __salt__["pushover.post_message"](
+            message,
+            title=title,
+            user=user,
+            device=device,
+            priority=priority,
+            expire=expire,
+            retry=retry,
+            sound=sound,
+            token=token,
+        )
+    except CommandExecutionError as err:
+        ret["result"] = False
+        ret["comment"] = f"Failed to send message '{name}'! Error: " + str(err)
+    else:
         ret["result"] = True
         ret["comment"] = f"Sent message: {name}"
-    else:
-        ret["comment"] = f"Failed to send message: {name}"
 
     return ret
