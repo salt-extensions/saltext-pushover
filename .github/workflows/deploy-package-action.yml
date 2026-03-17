@@ -73,8 +73,9 @@ jobs:
       - name: Publish distribution to Test PyPI
         uses: pypa/gh-action-pypi-publish@106e0b0b7c337fa67ed433972f777c6357f78598 # v1.13.0
         with:
-          attestations: ${{ secrets.TEST_PYPI_API_TOKEN == '' }}
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          # attestations: ${{ secrets.TEST_PYPI_API_TOKEN == '' }}
+          # password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          attestations: true
           repository-url: https://test.pypi.org/legacy/
           verbose: ${{ runner.debug == '1' }}
 
@@ -102,8 +103,9 @@ jobs:
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@106e0b0b7c337fa67ed433972f777c6357f78598 # v1.13.0
         with:
-          attestations: ${{ secrets.PYPI_API_TOKEN == '' }}
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          # attestations: ${{ secrets.PYPI_API_TOKEN == '' }}
+          # password: ${{ secrets.PYPI_API_TOKEN }}
+          attestations: true
           verbose: ${{ runner.debug == '1' }}
 
   docs_release:
