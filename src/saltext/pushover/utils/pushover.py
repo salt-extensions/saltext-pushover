@@ -7,6 +7,7 @@ import logging
 import salt.utils.http
 import salt.utils.json
 from salt.exceptions import CommandExecutionError
+from salt.exceptions import SaltInvocationError
 
 log = logging.getLogger(__name__)
 
@@ -216,3 +217,94 @@ def validate_user(user, token, device=None, *, context=None, opts=None):
     # Only cache successful lookups to avoid false negatives
     context[ckey] = True
     return True
+
+
+def post_message(
+    message,
+    user,
+    token,
+    *,
+    title=None,
+    device=None,
+    priority=0,
+    expire=None,
+    retry=None,
+    sound=None,
+    opts=None,
+):
+    """
+    .. versionadded:: 2.0.0
+
+    Send a message to a Pushover user or group.
+
+    message
+        Message text to send. Required.
+
+    user
+        User or group of users to send the message to. Must be a user/group ID (key),
+        not a name or an email address. Required.
+
+    token
+        Pushover API token. Required.
+
+    title
+        Message title. Defaults to ``Message from Salt``.
+
+    device
+        Name of the device to send the message to. Defaults to all devices of the user.
+
+    priority
+        Message priority (integers between ``-2`` and ``2``).
+        Defaults to ``0``.
+
+        .. note::
+
+            Emergency priority (``2``) requires ``expire`` and ``retry`` parameters
+            to be set.
+
+    expire
+        Stop notifying the user after the specified amount of seconds.
+        The message is still shown after expiry.
+
+    retry
+        Repeat the notification after this amount of seconds. Minimum: ``30``.
+
+    sound
+        `Notification sound <https://pushover.net/api#sounds>`_ to play. Defaults to user default.
+
+    opts
+        Pass through ``__opts__`` to respect Salt HTTP configuration.
+    """
+    if priority not in range(-2, 3):
+        raise SaltInvocationError(
+            f"Invalid priority {priority}. Needs to be an integer between -2 and 2 (inclusive)"
+        )
+    if priority == 2 and not (expire and retry):
+        raise SaltInvocationError(
+            "Emergency messages require `expire` and `retry` parameters to be set"
+        )
+
+    if retry and retry < 30:
+        raise SaltInvocationError("`retry` needs to be at least 30 (seconds)")
+
+    payload = {
+        "user": user,
+        "title": title or "Message from Salt",
+        "priority": priority,
+        "message": message,
+    }
+    if device is not None:
+        payload["device"] = device
+    if expire is not None:
+        payload["expire"] = expire
+    if retry is not None:
+        payload["retry"] = retry
+    if sound:
+        payload["sound"] = sound
+
+    return query(
+        endpoint="messages",
+        token=token,
+        data=payload,
+        opts=opts,
+    )

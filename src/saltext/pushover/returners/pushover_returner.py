@@ -86,54 +86,6 @@ def _get_options(ret=None):
     return _options
 
 
-def _post_message(
-    user,
-    device,
-    message,
-    title,
-    priority,
-    expire,
-    retry,
-    sound,
-    token=None,
-):
-    """
-    Send a message to a Pushover user or group.
-
-    :param user:        The user or group to send to, must be key of user or group not email address.
-    :param message:     The message to send to the Pushover user or group.
-    :param title:       Specify who the message is from.
-    :param priority     The priority of the message, defaults to 0.
-    :param notify:      Whether to notify the room, default: False.
-    :param token:       The Pushover token, if not specified in the configuration.
-    :return:            Boolean if message was sent successfully.
-    """
-
-    pushover.validate_user(user, token, device=device, context=__context__, opts=__opts__)
-
-    parameters = {}
-    parameters["user"] = user
-    if device is not None:
-        parameters["device"] = device
-    parameters["title"] = title
-    parameters["priority"] = priority
-    if expire is not None:
-        parameters["expire"] = expire
-    if retry is not None:
-        parameters["retry"] = retry
-    parameters["message"] = message
-
-    if sound and pushover.validate_sound(sound, token):
-        parameters["sound"] = sound
-
-    return pushover.query(
-        "messages",
-        token=token,
-        data=parameters,
-        opts=__opts__,
-    )
-
-
 def returner(ret):
     """
     Send a Pushover notification with the return data.
@@ -156,12 +108,6 @@ def returner(ret):
     if not user:
         raise SaltInvocationError("Pushover user key is unavailable.")
 
-    if priority and priority == 2:
-        if not expire and not retry:
-            raise SaltInvocationError(
-                "Priority 2 requires pushover.expire and pushover.retry options."
-            )
-
     # pylint: disable=consider-using-f-string
     message = "id: {}\r\nfunction: {}\r\nfunction args: {}\r\njid: {}\r\nreturn: {}\r\n".format(
         ret.get("id"),
@@ -172,16 +118,17 @@ def returner(ret):
     )
 
     try:
-        res = _post_message(
-            user=user,
-            device=device,
-            message=message,
+        res = pushover.post_message(
+            message,
+            user,
+            token,
             title=title,
+            device=device,
             priority=priority,
             expire=expire,
             retry=retry,
             sound=sound,
-            token=token,
+            opts=__opts__,
         )
         log.debug("Pushover result: %s", res)
     except CommandExecutionError as err:
