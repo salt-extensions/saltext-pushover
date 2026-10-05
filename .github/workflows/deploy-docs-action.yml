@@ -10,6 +10,12 @@ on:
         type: string
         required: false
         default: html-docs
+      # The workflow run that hosts the docs artifact. Defaults to
+      # the triggering run (`workflow_run` trigger) or the current one.
+      run-id:
+        type: string
+        required: false
+        default: ''
 
 
 permissions:
@@ -47,7 +53,7 @@ jobs:
           name: ${{ inputs.artifact-name }}
           path: html-docs
           github-token: ${{ github.token }}
-          run-id: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || github.run_id }}
+          run-id: ${{ inputs.run-id || github.event_name == 'workflow_run' && github.event.workflow_run.id || github.run_id }}
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
@@ -57,7 +63,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5.0.0
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1
         with:
           artifact_name: html-docs-pages
 
@@ -68,7 +74,7 @@ jobs:
           name: html-docs-pages
           failOnError: false
 
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Upload Exit Status
         if: always()
